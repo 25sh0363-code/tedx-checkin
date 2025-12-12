@@ -283,7 +283,7 @@
         </div>
 
         <div class="button-container">
-            <button onclick="location.reload()">🔄 Reset Scanner</button>
+            <button id="actionBtn" onclick="resumeScanner()">🔄 Scan Next</button>
         </div>
     </div>
 
@@ -295,6 +295,7 @@
         let checkedInCount = 0;
         let html5QrCode = null;
         let isProcessing = false;
+        let scannerStopped = false;
 
         // Check if script URL is configured
         if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
@@ -321,10 +322,26 @@
             }
         }
 
+        // Resume scanner function
+        function resumeScanner() {
+            if (html5QrCode && scannerStopped) {
+                html5QrCode.resume();
+                scannerStopped = false;
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('actionBtn').textContent = '🔄 Scan Next';
+            }
+        }
+
         // Check-in attendee
         async function checkInAttendee(qrData) {
             if (isProcessing) return;
             isProcessing = true;
+            
+            // Stop scanner immediately
+            if (html5QrCode) {
+                html5QrCode.pause(true);
+                scannerStopped = true;
+            }
 
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
@@ -371,7 +388,7 @@
                         document.getElementById('pending').textContent = pending - 1;
                     }
 
-                    // Play success sound (optional)
+                    // Play success sound
                     playSound('success');
 
                 } else if (data.alreadyCheckedIn) {
@@ -382,6 +399,18 @@
                             <div class="info-row">
                                 <span class="info-label">Name:</span>
                                 <span class="info-value">${data.name}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value">${data.email}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phone:</span>
+                                <span class="info-value">${data.phone || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">School:</span>
+                                <span class="info-value">${data.school || 'N/A'}</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Previous Check-in:</span>
@@ -397,10 +426,14 @@
                     playSound('error');
                 }
 
+                // Change button text
+                document.getElementById('actionBtn').textContent = '✓ Scan Next Person';
+
             } catch (error) {
                 resultDiv.className = 'result error';
                 resultDiv.innerHTML = `<h3>❌ Connection Error</h3><p>${error.message}</p>`;
                 playSound('error');
+                document.getElementById('actionBtn').textContent = '⚠️ Try Again';
             }
 
             isProcessing = false;
@@ -443,13 +476,9 @@
                     aspectRatio: 1.0
                 },
                 (decodedText) => {
-                    html5QrCode.pause(true);
-                    checkInAttendee(decodedText);
-                    setTimeout(() => {
-                        if (html5QrCode) {
-                            html5QrCode.resume();
-                        }
-                    }, 3000);
+                    if (!isProcessing && !scannerStopped) {
+                        checkInAttendee(decodedText);
+                    }
                 },
                 (errorMessage) => {
                     // Ignore scanning errors (too noisy)
@@ -479,3 +508,4 @@
     </script>
 </body>
 </html>
+
