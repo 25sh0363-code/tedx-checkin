@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEDxSilverOaks - Staff Check-in Portal</title>
+    <link rel="icon" type="image/png" href="https://tedxsilveroaksintschoolbachupally.live/assets/images/maya-eye-removebg-preview.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: 900;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .logo .x {
+            color: #e62b1e;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .stats-container {
+            background: white;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e62b1e;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scanner-container {
+            background: white;
+            padding: 30px;
+        }
+
+        #reader {
+            border: 3px solid #e62b1e;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .result {
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 3px solid #28a745;
+            color: #155724;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 3px solid #dc3545;
+            color: #721c24;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 3px solid #ffc107;
+            color: #856404;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .attendee-info {
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            width: 120px;
+            color: #555;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .button-container {
+            background: white;
+            padding: 20px 30px 30px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+        }
+
+        button {
+            background: #e62b1e;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #c41f15;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(230, 43, 30, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-number {
+                font-size: 28px;
+            }
+        }
+
+        .setup-warning {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px;
+            color: #856404;
+        }
+
+        .setup-warning h3 {
+            margin-bottom: 10px;
+        }
+
+        .setup-warning code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">TED<span class="x">x</span>SilverOaks</div>
+            <div class="subtitle">Staff Check-in Portal</div>
+            <div style="font-size: 12px; color: #999; margin-top: 10px;">Maya: Illusions in Daily Life</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <span class="stat-number" id="checkedIn">-</span>
+                <div class="stat-label">Checked In</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="totalReg">-</span>
+                <div class="stat-label">Registered</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="pending">-</span>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+
+        <div class="scanner-container">
+            <div id="setup-check" class="setup-warning" style="display: none;">
+                <h3>⚠️ Configuration Required</h3>
+                <p>Please update the <code>SCRIPT_URL</code> in the HTML file with your Google Apps Script Web App URL.</p>
+            </div>
+
+            <div id="reader"></div>
+            <div id="result" class="result"></div>
+        </div>
+
+        <div class="button-container">
+            <button onclick="location.reload()">🔄 Reset Scanner</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // ⚠️ REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzhHnqr7rMkrADCwsYwBbaYHxkgTMzvg-B4qGLjfI0XRZjhaK8yEV-1s_RoDdqt7fi/exec';
+        
+        let checkedInCount = 0;
+        let html5QrCode = null;
+        let isProcessing = false;
+
+        // Check if script URL is configured
+        if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+            document.getElementById('setup-check').style.display = 'block';
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('checkedIn').textContent = data.checkedIn || 0;
+                    document.getElementById('totalReg').textContent = data.total || 0;
+                    document.getElementById('pending').textContent = data.pending || 0;
+                    checkedInCount = data.checkedIn || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('checkedIn').textContent = '?';
+                document.getElementById('totalReg').textContent = '?';
+                document.getElementById('pending').textContent = '?';
+            }
+        }
+
+        // Check-in attendee
+        async function checkInAttendee(qrData) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="pulse">⏳ Processing...</div>';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=checkin&id=${encodeURIComponent(qrData)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Check-in Successful!</h3>
+                        <div class="attendee-info">
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">${data.name}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value">${data.email}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phone:</span>
+                                <span class="info-value">${data.phone || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">School:</span>
+                                <span class="info-value">${data.school || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Time:</span>
+                                <span class="info-value">${data.checkInTime}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Update stats
+                    checkedInCount++;
+                    document.getElementById('checkedIn').textContent = checkedInCount;
+                    const pending = parseInt(document.getElementById('pending').textContent);
+                    if (!isNaN(pending)) {
+                        document.getElementById('pending').textContent = pending - 1;
+                    }
+
+                    // Play success sound (optional)
+                    playSound('success');
+
+                } else if (data.alreadyCheckedIn) {
+                    resultDiv.className = 'result warning';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ Already Checked In</h3>
+                        <div class="attendee-info">
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">${data.name}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Previous Check-in:</span>
+                                <span class="info-value">${data.checkInTime}</span>
+                            </div>
+                        </div>
+                    `;
+                    playSound('warning');
+
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<h3>❌ ${data.message}</h3>`;
+                    playSound('error');
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h3>❌ Connection Error</h3><p>${error.message}</p>`;
+                playSound('error');
+            }
+
+            isProcessing = false;
+        }
+
+        // Optional: Play sound for feedback
+        function playSound(type) {
+            // You can add audio elements for better UX
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'success') {
+                oscillator.frequency.value = 800;
+            } else if (type === 'warning') {
+                oscillator.frequency.value = 600;
+            } else {
+                oscillator.frequency.value = 400;
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // Initialize QR Scanner
+        function startScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                (decodedText) => {
+                    html5QrCode.pause(true);
+                    checkInAttendee(decodedText);
+                    setTimeout(() => {
+                        if (html5QrCode) {
+                            html5QrCode.resume();
+                        }
+                    }, 3000);
+                },
+                (errorMessage) => {
+                    // Ignore scanning errors (too noisy)
+                }
+            ).catch(err => {
+                console.error("Camera error:", err);
+                document.getElementById('reader').innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc3545;">
+                        <h3>📷 Camera Access Required</h3>
+                        <p style="margin-top: 10px;">Please allow camera access to scan QR codes.</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            loadStats();
+            startScanner();
+            
+            // Refresh stats every 30 seconds
+            setInterval(loadStats, 30000);
+        });
+    </script>
+</body>
+</html>
